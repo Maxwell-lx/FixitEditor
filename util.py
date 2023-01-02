@@ -1,6 +1,7 @@
 import time
 import datetime
 import chardet
+import json
 
 
 def checkencodingtype(file):
@@ -38,3 +39,10 @@ def gb2utf8(path):
     f.close()
 
 
+def loadconfig():
+    with open("config.json", "r", encoding='UTF-8') as f:
+        return json.load(f)
+
+
+def winpath2cygpath(winpath):
+    return "/cygdrive/" + winpath.replace(":", "").replace("\\", "/")

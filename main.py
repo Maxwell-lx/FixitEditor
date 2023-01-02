@@ -1,23 +1,30 @@
+import os
 import os.path
 import sys
-from PyQt5.QtWidgets import QWidget, QMessageBox, QApplication
 import json
-import math
-from PyQt5 import QtWidgets
-from posteditor import Ui_MainWindow
+# pyqt
 import time
+
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox, QApplication
+# 模板替换
+from string import Template
+# 剪贴板
+import pyperclip
+# ui文件
+from fixiteditor_ui import Ui_MainWindow
+# 弹窗窗口
+from config_window import Config
+# 自定义
 import head_translate as headT
 import util as ut
-from string import Template
-import pyperclip
-import os
 
 
 class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self):
-        # super().__init__()
         super(InitMainWindow, self).__init__()
+        self.Config = Config()
         self.setupUi(self)
         self.initUI()
         self.show()
@@ -31,10 +38,10 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionsave.setShortcut("CTRL+S")
         self.actionsave.triggered.connect(self.savefile)
         self.CB_isencryption.stateChanged.connect(self.setEncryptionMode)
-        self.CoB_tags.currentTextChanged.connect(self.addtags)
 
         # 快捷复制
         self.PB_suojin.clicked.connect(self.suojin)
+        self.PB_konghang.clicked.connect(self.konghang)
         self.PB_highlight.clicked.connect(self.highlight)
         self.PB_image.clicked.connect(self.image)
         self.PB_admonition.clicked.connect(self.admonition)
@@ -45,10 +52,12 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.PB_quote.clicked.connect(self.quote)
         self.PB_link.clicked.connect(self.link)
         # 启动
-        self.PB_localserver.clicked.connect(self.localserver)
+        self.PB_localserver.clicked.connect(self.localserver_start)
         self.PB_cloudserver.clicked.connect(self.cloudserver)
-
-        self.load_config()
+        # 打开配置窗口
+        self.actionconfig.triggered.connect(self.Config.open)
+        # 其他
+        self.reload_config()
 
     def newfile(self):
         value, ok = QtWidgets.QInputDialog.getText(self, "新建post", "请输入文件名:", QtWidgets.QLineEdit.Normal, "new post")
@@ -56,12 +65,17 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.LB_postname.setText(value + ".md")
             self.LB_status.setText("新建Post！")
             self.LB_date.setText(ut.getdate())
-            self.LE_license.setText("Maxwell-lx all rights reserved.")
+            self.LE_title.setText(value)
         else:
             self.LB_status.setText("新建Post失败！")
 
     def loadfile(self):
-        fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", "../content/posts/", "Markdown (*.md)")
+        config = ut.loadconfig()
+        dir_path = config["sitepath"] + "\\content\\posts\\"
+        if not os.path.exists(dir_path):
+            self.LB_status.setText('content\\posts\\路径不存在！')
+            return 0
+        fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", dir_path, "Markdown (*.md)")
         if ok:
             with open(fname, 'r', encoding='utf-8') as f:
                 fulltext = f.read()
@@ -78,11 +92,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.LB_status.setText("加载Post成功！")
                     self.LE_title.setText(head_dict["title"])
                     self.LE_subtitle.setText(head_dict["subtitle"])
-                    self.LE_description.setText(head_dict["description"])
-                    self.LE_keywords.setText(ut.list2str(head_dict["keywords"]))
-                    self.LE_license.setText(head_dict["license"])
                     self.LE_imgeurl.setText(head_dict["featuredImage"])
-                    self.LB_tags.setText(ut.list2str(head_dict["tags"]))
                     if len(head_dict["password"]) > 0:
                         self.CB_isencryption.setChecked(True)
                         self.LE_password.setEnabled(True)
@@ -95,137 +105,132 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                         self.LE_password_tip.setDisabled(True)
                         self.LE_password.setText("")
                         self.LE_password_tip.setText("")
-                    # show in home
+                    # 主页显示
                     if head_dict["hiddenFromHomePage"] == "false":
                         self.CB_isshowinhome.setChecked(True)
                     else:
                         self.CB_isshowinhome.setChecked(False)
-                    # category
+                    # 目录
                     if len(head_dict['categories']) > 0 and (head_dict["categories"][0] in config["categories"]):
                         self.CoB_category.setCurrentIndex(config["categories"].index(head_dict["categories"][0]) + 1)
                     else:
                         self.CoB_category.setCurrentIndex(0)
-                    # menu
+                    # 菜单
                     if head_dict["menu"] not in config["menu"]:
                         self.CoB_menu.setCurrentIndex(0)
                     else:
                         self.CoB_menu.setCurrentIndex(config["menu"].index(head_dict["menu"]) + 1)
-                    # page width, pageStyle
+                    # 页面宽度样式
                     page_style = ['narrow', 'normal', 'wide']
                     if head_dict["pageStyle"] not in page_style:
                         self.CoB_pagewidth.setCurrentIndex(1)
                     else:
                         self.CoB_pagewidth.setCurrentIndex(page_style.index(head_dict["pageStyle"]))
-                    self.TE_abstract.setText(head_dict["abstract"])
-                    self.TE_editor.setText(fulltext_list[1])
+                    self.TE_abstract.setPlainText(head_dict["abstract"])
+                    # self.TE_editor.setText(fulltext_list[1])
+                    self.TE_editor.setPlainText(fulltext_list[1])
                 else:
                     self.LB_status.setText('该文档不是网站Post类型！')
 
     def savefile(self):
+        config = ut.loadconfig()
         if len(self.LB_postname.text()) == 0:
             self.LB_status.setText('当前Post为空，请加载或新建Post！')
         else:
-            self.save_post()
+            savePath = config["sitepath"] + '\\content\\posts\\' + self.LB_postname.text()
+            class_file = open(savePath, 'w')
+            self.LB_lastmod.setText(ut.getdate())
+            self.LB_status.setText("保存成功！")
+            head1_tmpl = open('head1.tmpl', 'r')
+            menu_tmpl = open('menu.tmpl', 'r')
+            head2_tmpl = open('head2.tmpl', 'r')
+            head1_ = Template(head1_tmpl.read())
+            menu_ = Template(menu_tmpl.read())
+            head2_ = Template(head2_tmpl.read())
 
-    def load_config(self):
-        with open("config.json", "r", encoding='UTF-8') as f:
-            config = json.load(f)
-            self.LB_author.setText(config["author"])
-            self.CoB_tags.addItems(config["tags"])
-            self.CoB_category.addItems(config["categories"])
-            self.CoB_menu.addItems(config["menu"])
-            self.LB_status.setText("已加载网站配置config.json！")
-            self.LB_chrome.setText(config["chrome"])
-            self.LB_cloud.setText(config['cloud'])
-            self.LE_license.setText(config['license'])
+            mypost = []
+            config = ut.loadconfig()
+            mypost.append(head1_.substitute(
+                title=self.LE_title.text(),
+                subtitle=self.LE_subtitle.text(),
+                license=config["license"],
+                categories='["' + self.CoB_category.currentText() + '"]' if len(self.CoB_category.currentText()) > 0 else "",
+                featuredImage=self.LE_imgeurl.text(),
+                showinhome="false" if self.CB_isshowinhome.isChecked() else "true",
+                pagestyle=self.CoB_pagewidth.currentText(),
+                password=self.LE_password.text() if self.CB_isencryption.isChecked() else "",
+                message=self.LE_password_tip.text(),
+                author=config["author"],
+                date=self.LB_date.text(),
+                lastmod=self.LB_lastmod.text()))
+            if len(self.CoB_menu.currentText()) > 0:
+                mypost.append(menu_.substitute(
+                    menu_flag="menu_y",
+                    menu=self.CoB_menu.currentText()))
+            else:
+                mypost.append('#menu_n\n')
+            mypost.append(head2_.substitute(
+                abstract=self.TE_abstract.toPlainText(),
+                editor=self.TE_editor.toPlainText()))
 
-    def save_post(self):
-        savePath = '../content/posts/' + self.LB_postname.text()
-        class_file = open(savePath, 'w')
-        self.LB_lastmod.setText(ut.getdate())
-        self.LB_status.setText("保存成功！")
-        head1_tmpl = open('head1.tmpl', 'r')
-        menu_tmpl = open('menu.tmpl', 'r')
-        head2_tmpl = open('head2.tmpl', 'r')
-        head1_ = Template(head1_tmpl.read())
-        menu_ = Template(menu_tmpl.read())
-        head2_ = Template(head2_tmpl.read())
+            # 将代码写入文件
+            class_file.writelines(mypost)
+            class_file.close()
+            # 转码
+            ut.gb2utf8(savePath)
 
-        mypost = []
-        mypost.append(head1_.substitute(
-            title=self.LE_title.text(),
-            subtitle=self.LE_subtitle.text(),
-            description=self.LE_description.text(),
-            keywords="[" + ut.addquotes4list(self.LE_keywords.text()) + "]" if len(self.LE_keywords.text()) > 0 else "",
-            license=self.LE_license.text(),
-            tags="[" + ut.addquotes4list(self.LB_tags.text()) + "]" if len(self.LB_tags.text()) > 0 else "",
-            categories='["' + self.CoB_category.currentText() + '"]' if len(self.CoB_category.currentText()) > 0 else "",
-            featuredImage=self.LE_imgeurl.text(),
-            showinhome="false" if self.CB_isshowinhome.isChecked() else "true",
-            pagestyle=self.CoB_pagewidth.currentText(),
-            password=self.LE_password.text() if self.CB_isencryption.isChecked() else "",
-            message=self.LE_password_tip.text(),
-            author=self.LB_author.text(),
-            date=self.LB_date.text(),
-            lastmod=self.LB_lastmod.text()))
-        if len(self.CoB_menu.currentText()) > 0:
-            mypost.append(menu_.substitute(
-                menu_flag="#menu_y",
-                menu=self.CoB_menu.currentText()))
-        else:
-            mypost.append('\n#menu_n\n')
-        mypost.append(head2_.substitute(
-            abstract=self.TE_abstract.toPlainText(),
-            editor=self.TE_editor.toPlainText()))
-
-        # 将代码写入文件
-        class_file.writelines(mypost)
-        class_file.close()
-        # 转码
-        ut.gb2utf8(savePath)
-
-    def addtags(self):
-        new_tag = self.CoB_tags.currentText()
-        tags = self.LB_tags.text()
-        if new_tag not in tags and new_tag != "":
-            if len(tags) != 0:
-                tags += ","
-            self.LB_tags.setText(tags + new_tag)
+    def reload_config(self):
+        config = ut.loadconfig()
+        self.CoB_category.clear()
+        self.CoB_category.addItems([""])  # 添加空元素
+        self.CoB_category.addItems(config["categories"])
+        self.CoB_menu.clear()
+        self.CoB_menu.addItems([""])  # 添加空元素
+        self.CoB_menu.addItems(config["menu"])
+        self.LB_status.setText("已加载配置！")
 
     def setEncryptionMode(self):
         if self.CB_isencryption.isChecked():
             self.LE_password.setEnabled(True)
             self.LE_password_tip.setEnabled(True)
+            self.CB_isshowinhome.setChecked(False)
+            self.CB_isshowinhome.setDisabled(True)
         else:
             self.LE_password.setDisabled(True)
             self.LE_password_tip.setDisabled(True)
+            self.CB_isshowinhome.setChecked(True)
+            self.CB_isshowinhome.setDisabled(False)
 
+    # ----------------------一键复制-----------------------#
     def suojin(self):
         pyperclip.copy("&emsp;&emsp;")
+
+    def konghang(self):
+        pyperclip.copy("&nbsp;")
 
     def highlight(self):
         pyperclip.copy("{{< highlight html >}}\n\n{{< /highlight >}}")
 
     def image(self):
-        pyperclip.copy('{{< image src="/images/lighthouse.jpg" caption="Lighthouse" width=400 >}}')
+        pyperclip.copy('{{< image src="/images/lighthouse.jpg" caption="Lighthouse" width=400 linked=false >}}')
 
     def admonition(self):
         pyperclip.copy('{{< admonition type=tip title="This is a tip" open=false >}}\n一个 **技巧** 横幅\n{{< /admonition >}}')
 
     def mermaid(self):
         pyperclip.copy('''
-{{< mermaid >}}
-gantt
-dateFormat  YYYY-MM-DD
-title Adding GANTT diagram to mermaid
-
-section A section
-Completed task            :done,    des1, 2014-01-06,2014-01-08
-  Active task               :active,  des2, 2014-01-09, 3d
-  Future task               :         des3, after des2, 5d
-  Future task2              :         des4, after des3, 5d
-  {{< /mermaid >}}')
-''')
+        {{< mermaid >}}
+        gantt
+        dateFormat  YYYY-MM-DD
+        title Adding GANTT diagram to mermaid
+        
+        section A section
+        Completed task            :done,    des1, 2014-01-06,2014-01-08
+          Active task               :active,  des2, 2014-01-09, 3d
+          Future task               :         des3, after des2, 5d
+          Future task2              :         des4, after des3, 5d
+          {{< /mermaid >}}')
+        ''')
 
     def echart(self):
         pyperclip.copy('{{< echarts >}}\njson\n{{< /echarts >}}')
@@ -238,27 +243,50 @@ Completed task            :done,    des1, 2014-01-06,2014-01-08
 
     def quote(self):
         pyperclip.copy('''
-{{ <center-quote>}}
-**hello** *world*
-this is a center - quote shortcode example.
-{{ </center-quote>}}
-''')
+        {{ <center-quote>}}
+        **hello** *world*
+        this is a center - quote shortcode example.
+        {{ </center-quote>}}
+        ''')
 
     def link(self):
         pyperclip.copy('{{< link href="https://github.com/hugo-fixit/FixIt" content="FixIt Theme" title="source of FixIt Theme" card=true download="/mainsitehead.md">}}')
 
-    def localserver(self):
-        os.popen('cd .. && start "' + self.LB_chrome.text() + '" http://127.0.0.1:1313 && hugo server')
+    # ----------------------server-------------------------#
+    def localserver_start(self):
+        config = ut.loadconfig()
+        fastRender = "--disableFastRender" if self.CB_fastRender.isChecked() else ""
+        self.localserver_popen = os.popen('cd ' + config["sitepath"] + ' && start "' + config["chrome"] + '" http://127.0.0.1:1313 && '
+                                          + os.getcwd() + "\\tools\\hugo.exe server -p 1313 " + fastRender)
 
     def cloudserver(self):
-        os.system('cd .. && hugo && cd public && git add . && git commit -m "update post" && git push && ssh ' + self.LB_cloud.text())
+        config = ut.loadconfig()
+        # 覆盖式创建密码文件
+        f = open('rsync.passwd', 'w+')
+        f.write(config["rsyncuserpasswd"])
+        f.close()
+        time.sleep(0.2)
+        # 向云服务器同步
+        sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
+        rsync_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/public  " + config["rsyncuser"] + "@" + config[
+            "cloudserver"] + "::myblog/ --password-file="+ut.winpath2cygpath(os.getcwd())+"/rsync.passwd"
+        p=os.popen('cd ' + config["sitepath"] + " && " +
+                                          os.getcwd() + "\\tools\\hugo.exe" + " && " +
+                                          rsync_cmd)
+    # self.cloudserver_popen.writelines(config["rsyncuserpasswd"])
 
-    def closeEvent(self, event):
-        reply = QMessageBox.question(self, '退出PostEditor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            event.accept()
-        else:
-            event.ignore()
+
+# --------------------退出-------------------------#
+def closeEvent(self, event):
+    reply = QMessageBox.question(self, '退出Fixit-Editor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    if reply == QMessageBox.Yes:
+        event.accept()
+    else:
+        event.ignore()
+
+
+# -----------------------其他------------------------#
+# def addItemIfNotEqual(self):
 
 
 if __name__ == '__main__':

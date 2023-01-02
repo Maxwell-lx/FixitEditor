@@ -1,10 +1,15 @@
 {
-  "author": "Lixing",
-  "tags": ["抗疫日记"],
-  "categories": ["随笔","建站","健身杂谈","收藏","工具"],
-  "menu": ["工具","建站"],
-  "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  "cloud": "root@123.249.81.80",
-  "license": "Maxwell-lx all rights reserved."
-
+    "sitepath": "",
+    "chrome": "",
+    "cloudserver": "",
+    "rsyncuser": "",
+    "rsyncuserpasswd": "",
+    "author": "",
+    "categories": [
+        ""
+    ],
+    "menu": [
+        ""
+    ],
+    "license": ""
 }
