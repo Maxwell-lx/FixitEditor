@@ -296,6 +296,19 @@
      </layout>
     </widget>
    </widget>
+   <widget class="QPushButton" name="PB_loadconfig">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>380</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>载入配置文件</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources>

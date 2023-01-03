@@ -57,90 +57,94 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 打开配置窗口
         self.actionconfig.triggered.connect(self.Config.open)
         # 其他
-        self.reload_config()
+        self.refresh_combox()
 
     def newfile(self):
         value, ok = QtWidgets.QInputDialog.getText(self, "新建post", "请输入文件名:", QtWidgets.QLineEdit.Normal, "new post")
         if ok:
+            self.refresh_combox()
+            self.status_message("新建Post")
             self.LB_postname.setText(value + ".md")
-            self.LB_status.setText("新建Post！")
             self.LB_date.setText(ut.getdate())
             self.LE_title.setText(value)
         else:
-            self.LB_status.setText("新建Post失败！")
+            self.status_error("新建post失败")
 
     def loadfile(self):
+        self.refresh_combox()
         config = ut.loadconfig()
         dir_path = config["sitepath"] + "\\content\\posts\\"
         if not os.path.exists(dir_path):
-            self.LB_status.setText('content\\posts\\路径不存在！')
+            self.status_error('不存在此路径：content\\posts\\')
             return 0
         fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", dir_path, "Markdown (*.md)")
         if ok:
             with open(fname, 'r', encoding='utf-8') as f:
                 fulltext = f.read()
-                with open("config.json", "r", encoding='utf-8') as f:
-                    config = json.load(f)
-                if "<!--more-->" in fulltext:  # 摘要分割
-                    fulltext_list = fulltext.split("<!--more-->\n")
-                    # 读取
-                    head_dict = headT.head2json(fulltext_list[0])
-                    # set
-                    self.LB_postname.setText(fname.split('/')[-1])
-                    self.LB_date.setText(head_dict["date"])
-                    self.LB_lastmod.setText(head_dict["lastmod"])
-                    self.LB_status.setText("加载Post成功！")
-                    self.LE_title.setText(head_dict["title"])
-                    self.LE_subtitle.setText(head_dict["subtitle"])
-                    self.LE_imgeurl.setText(head_dict["featuredImage"])
-                    if len(head_dict["password"]) > 0:
-                        self.CB_isencryption.setChecked(True)
-                        self.LE_password.setEnabled(True)
-                        self.LE_password_tip.setEnabled(True)
-                        self.LE_password.setText(head_dict["password"])
-                        self.LE_password_tip.setText(head_dict["message"])
-                    else:
-                        self.CB_isencryption.setChecked(False)
-                        self.LE_password.setDisabled(True)
-                        self.LE_password_tip.setDisabled(True)
-                        self.LE_password.setText("")
-                        self.LE_password_tip.setText("")
-                    # 主页显示
-                    if head_dict["hiddenFromHomePage"] == "false":
-                        self.CB_isshowinhome.setChecked(True)
-                    else:
-                        self.CB_isshowinhome.setChecked(False)
-                    # 目录
-                    if len(head_dict['categories']) > 0 and (head_dict["categories"][0] in config["categories"]):
-                        self.CoB_category.setCurrentIndex(config["categories"].index(head_dict["categories"][0]) + 1)
-                    else:
-                        self.CoB_category.setCurrentIndex(0)
-                    # 菜单
-                    if head_dict["menu"] not in config["menu"]:
-                        self.CoB_menu.setCurrentIndex(0)
-                    else:
-                        self.CoB_menu.setCurrentIndex(config["menu"].index(head_dict["menu"]) + 1)
-                    # 页面宽度样式
-                    page_style = ['narrow', 'normal', 'wide']
-                    if head_dict["pageStyle"] not in page_style:
-                        self.CoB_pagewidth.setCurrentIndex(1)
-                    else:
-                        self.CoB_pagewidth.setCurrentIndex(page_style.index(head_dict["pageStyle"]))
-                    self.TE_abstract.setPlainText(head_dict["abstract"])
-                    # self.TE_editor.setText(fulltext_list[1])
-                    self.TE_editor.setPlainText(fulltext_list[1])
+            with open("config.json", "r", encoding='utf-8') as f:
+                config = json.load(f)
+            if "<!--more-->" in fulltext:  # 摘要分割
+                fulltext_list = fulltext.split("<!--more-->\n")
+                main_text = fulltext_list[1]
+                # 读取
+                head_dict = headT.head2json(fulltext_list[0])
+                # 写入编辑器界面
+                self.LB_postname.setText(fname.split('/')[-1])
+                self.LB_date.setText(head_dict["date"])
+                self.LB_lastmod.setText(head_dict["lastmod"])
+                self.status_message("加载Post成功！")
+                self.LE_title.setText(head_dict["title"])
+                self.LE_subtitle.setText(head_dict["subtitle"])
+                self.LE_imgeurl.setText(head_dict["featuredImage"])
+                if len(head_dict["password"]) > 0:
+                    self.CB_isencryption.setChecked(True)
+                    self.LE_password.setEnabled(True)
+                    self.LE_password_tip.setEnabled(True)
+                    self.LE_password.setText(head_dict["password"])
+                    self.LE_password_tip.setText(head_dict["message"])
                 else:
-                    self.LB_status.setText('该文档不是网站Post类型！')
+                    self.CB_isencryption.setChecked(False)
+                    self.LE_password.setDisabled(True)
+                    self.LE_password_tip.setDisabled(True)
+                    self.LE_password.setText("")
+                    self.LE_password_tip.setText("")
+                # 主页显示
+                if head_dict["hiddenFromHomePage"] == "false":
+                    self.CB_isshowinhome.setChecked(True)
+                else:
+                    self.CB_isshowinhome.setChecked(False)
+                # 目录
+                if len(head_dict['categories']) > 0 and (head_dict["categories"][0] in config["categories"]):
+                    self.CoB_category.setCurrentIndex(config["categories"].index(head_dict["categories"][0]) + 1)
+                else:
+                    self.CoB_category.setCurrentIndex(0)
+                # 菜单
+                if head_dict["menu"] not in config["menu"]:
+                    self.CoB_menu.setCurrentIndex(0)
+                else:
+                    self.CoB_menu.setCurrentIndex(config["menu"].index(head_dict["menu"]) + 1)
+                # 页面宽度样式
+                page_style = ['narrow', 'normal', 'wide']
+                if head_dict["pageStyle"] not in page_style:
+                    self.CoB_pagewidth.setCurrentIndex(1)
+                else:
+                    self.CoB_pagewidth.setCurrentIndex(page_style.index(head_dict["pageStyle"]))
+                # 摘要
+                self.TE_abstract.setPlainText(head_dict["abstract"])
+                # 正文
+                self.TE_editor.setPlainText(main_text)
+            else:
+                self.status_error('不支持的文件类型，或文件头不匹配！')
 
     def savefile(self):
         config = ut.loadconfig()
         if len(self.LB_postname.text()) == 0:
-            self.LB_status.setText('当前Post为空，请加载或新建Post！')
+            self.status_error('当前Post为空，请加载或新建Post！')
         else:
             savePath = config["sitepath"] + '\\content\\posts\\' + self.LB_postname.text()
             class_file = open(savePath, 'w')
             self.LB_lastmod.setText(ut.getdate())
-            self.LB_status.setText("保存成功！")
+            self.status_message("保存成功！")
             head1_tmpl = open('head1.tmpl', 'r')
             menu_tmpl = open('menu.tmpl', 'r')
             head2_tmpl = open('head2.tmpl', 'r')
@@ -179,7 +183,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # 转码
             ut.gb2utf8(savePath)
 
-    def reload_config(self):
+    def refresh_combox(self):
         config = ut.loadconfig()
         self.CoB_category.clear()
         self.CoB_category.addItems([""])  # 添加空元素
@@ -187,7 +191,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.CoB_menu.clear()
         self.CoB_menu.addItems([""])  # 添加空元素
         self.CoB_menu.addItems(config["menu"])
-        self.LB_status.setText("已加载配置！")
+        self.status_message("已加载配置")
 
     def setEncryptionMode(self):
         if self.CB_isencryption.isChecked():
@@ -200,6 +204,19 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.LE_password_tip.setDisabled(True)
             self.CB_isshowinhome.setChecked(True)
             self.CB_isshowinhome.setDisabled(False)
+
+    # ----------------------状态栏--------------------------#
+    def status_message(self, words):
+        self.LB_status.setText(words + " " + ut.gettime())
+        self.LB_status.setStyleSheet("color:rgb(0, 0, 0)")
+
+    def status_warning(self, words):
+        self.LB_status.setText(words + " " + ut.gettime())
+        self.LB_status.setStyleSheet("color:rgb(255, 255, 0)")
+
+    def status_error(self, words):
+        self.LB_status.setText(words + " " + ut.gettime())
+        self.LB_status.setStyleSheet("color:rgb(255, 0, 0)")
 
     # ----------------------一键复制-----------------------#
     def suojin(self):
@@ -254,12 +271,17 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     # ----------------------server-------------------------#
     def localserver_start(self):
+        self.status_message("启动本地服务")
         config = ut.loadconfig()
         fastRender = "--disableFastRender" if self.CB_fastRender.isChecked() else ""
-        self.localserver_popen = os.popen('cd ' + config["sitepath"] + ' && start "' + config["chrome"] + '" http://127.0.0.1:1313 && '
-                                          + os.getcwd() + "\\tools\\hugo.exe server -p 1313 " + fastRender)
+        command = 'cd ' + config["sitepath"] + ' && start "' + config["chrome"] + '" http://127.0.0.1:1313 && ' + os.getcwd() + "\\tools\\hugo.exe server -p 1313 " + fastRender
+        if self.CB_localserver_showcmd.isChecked():
+            os.system(command)
+        else:
+            os.popen(command)
 
     def cloudserver(self):
+        self.status_message("同步到云")
         config = ut.loadconfig()
         # 覆盖式创建密码文件
         f = open('rsync.passwd', 'w+')
@@ -269,20 +291,23 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 向云服务器同步
         sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
         rsync_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/public  " + config["rsyncuser"] + "@" + config[
-            "cloudserver"] + "::myblog/ --password-file="+ut.winpath2cygpath(os.getcwd())+"/rsync.passwd"
-        p=os.popen('cd ' + config["sitepath"] + " && " +
-                                          os.getcwd() + "\\tools\\hugo.exe" + " && " +
-                                          rsync_cmd)
-    # self.cloudserver_popen.writelines(config["rsyncuserpasswd"])
+            "cloudserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
+        command = 'cd ' + config["sitepath"] + " && " + os.getcwd() + "\\tools\\hugo.exe" + " && " + rsync_cmd
+        if self.CB_cloudserver_showcmd.isChecked():
+            os.system(command)
+        else:
+            os.popen(command)
 
 
-# --------------------退出-------------------------#
-def closeEvent(self, event):
-    reply = QMessageBox.question(self, '退出Fixit-Editor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-    if reply == QMessageBox.Yes:
-        event.accept()
-    else:
-        event.ignore()
+    # --------------------退出-------------------------#
+    def closeEvent(self, event):
+        reply = QMessageBox.question(self, '退出Fixit-Editor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            # 关闭其他子窗口
+            self.Config.close()
+            event.accept()
+        else:
+            event.ignore()
 
 
 # -----------------------其他------------------------#

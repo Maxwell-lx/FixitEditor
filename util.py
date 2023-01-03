@@ -30,6 +30,8 @@ def getdate():
     temp = datetime.datetime.now().isoformat()
     return temp[0:19] + "+08:00"
 
+def gettime():
+    return datetime.datetime.now().strftime('%H:%M:%S')
 
 def gb2utf8(path):
     f = open(path)

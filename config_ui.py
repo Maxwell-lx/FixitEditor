@@ -139,6 +139,9 @@ class Ui_Config(object):
         self.label_14.setEnabled(False)
         self.label_14.setObjectName("label_14")
         self.gridLayout_4.addWidget(self.label_14, 0, 2, 1, 1)
+        self.PB_loadconfig = QtWidgets.QPushButton(self.centralwidget)
+        self.PB_loadconfig.setGeometry(QtCore.QRect(90, 380, 91, 23))
+        self.PB_loadconfig.setObjectName("PB_loadconfig")
         Config.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(Config)
@@ -167,4 +170,5 @@ class Ui_Config(object):
         self.label_11.setText(_translate("Config", "e.g.:C:\\GoogleChrome\\chrome.exe   "))
         self.label_7.setText(_translate("Config", "网站本地路径"))
         self.label_14.setText(_translate("Config", "e.g.:D:\\myblog   "))
+        self.PB_loadconfig.setText(_translate("Config", "载入配置文件"))
 import ico_rc

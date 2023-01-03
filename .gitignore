@@ -1,6 +1,7 @@
 # 自定义
 .idea/
 test.py
+myconfig.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

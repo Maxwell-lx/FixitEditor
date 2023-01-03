@@ -6,6 +6,7 @@ from config_ui import Ui_Config
 # 自定义
 import util as ut
 
+
 class Config(QtWidgets.QMainWindow, Ui_Config):
     def __init__(self):
         super(Config, self).__init__()
@@ -14,25 +15,13 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
 
     def initUI(self):
         self.PB_saveconfig.clicked.connect(self.save_config)
-
+        self.PB_loadconfig.clicked.connect(self.load_config)
 
     def open(self):
         self.show()
         # 打开窗口同时加载config.json
         config = ut.loadconfig()
-        self.LE_sitepath.setText(config["sitepath"])
-        self.LE_chrome.setText(config["chrome"])
-        self.LE_cloudserver.setText(config["cloudserver"])
-        self.LE_rsyncuser.setText(config["rsyncuser"])
-        self.LE_rsyncuserpasswd.setText(config["rsyncuserpasswd"])
-
-
-        self.LE_author.setText(config["author"])
-        self.LE_categories.setText(ut.list2str(config["categories"]))
-        self.LE_menu.setText(ut.list2str(config["menu"]))
-
-
-        self.LE_license.setText(config["license"])
+        self.write_config2ui(config)
 
     def save_config(self):
         config_dict = {}
@@ -53,3 +42,23 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
             json_file.write(config_json)
         # 关闭弹窗
         self.close()
+
+    def load_config(self):
+        fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", filter="json (*.json)")
+        if ok:
+            with open(fname, 'r', encoding='utf-8') as f:
+                userconfig = json.load(f)
+                self.write_config2ui(userconfig)
+
+    def write_config2ui(self, config):
+        self.LE_sitepath.setText(config["sitepath"])
+        self.LE_chrome.setText(config["chrome"])
+        self.LE_cloudserver.setText(config["cloudserver"])
+        self.LE_rsyncuser.setText(config["rsyncuser"])
+        self.LE_rsyncuserpasswd.setText(config["rsyncuserpasswd"])
+
+        self.LE_author.setText(config["author"])
+        self.LE_categories.setText(ut.list2str(config["categories"]))
+        self.LE_menu.setText(ut.list2str(config["menu"]))
+
+        self.LE_license.setText(config["license"])

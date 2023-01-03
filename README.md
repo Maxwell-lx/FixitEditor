@@ -1,29 +1,29 @@
-# Fixit-Editor
-Fixit-Editor是基于Fixit的Post编辑器。
-
-如果你去[Fixit官网](https://fixit.lruihao.cn/zh-cn/)，你会被它的配置内容搞的眼花缭乱。关于这一点，本人非常理解作者，因为一个项目在开发过程中，它还不成熟的时候，总是会将功能全部展现；等到项目成熟后，功能删繁就简，项目才会变得简单易用。
-
-但是瑕不掩瑜，这些缺点仍不妨碍它成为一个好项目。因此，项目本着简单易用的初心，基于Pyqt开发了一款Fixit编辑器。
+# FixitEditor
+[Fixit](https://fixit.lruihao.cn/zh-cn/)是一款基于Hugo的网站主题，FixitEditor是基于Fixit的编辑器，整合了文件头、短代码、云同步等功能，让编辑变的更简单。
 
 ## 功能简述
 
-Fixit-Editor集成了
+FixitEditor集成了
 
-* **Fixit文件头**
+* **Fixit文件头管理**
 
-* **一键短代码**
+* **一些常用的短代码**
 
-* **一键本地启动**
+* **本地和云端同步**
 
-* **一键同步到云**
-
-* **markdown文本编辑器**
+* **markdown编辑功能**（）
 
   
 
-## 编译安装
+## 使用FixitEditor
 
-资源文件
+### 1. windows上，下载解压即可用
+
+如果有其他系统使用的需求，可以自行编译安装。
+
+### 2.编译安装
+
+编译之前，清空dist文件夹
 
 ```
 #【pyinstaller -w -i 图标ico文件的路径 主py文件 -p 打包路径】
@@ -31,7 +31,7 @@ pyinstaller -w -i fav.ico main.py -y
 python installer.py
 ```
 
-如果出现` Permission denied`错误，就手动执行替代。
+如果出现` Permission denied`错误，就手动执行。
 
 
 
