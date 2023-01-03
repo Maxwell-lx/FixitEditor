@@ -21,7 +21,7 @@ FixitEditor集成了
 
 ### 1. windows上，下载解压即可用
 
-[FixitEditor](https://github.com/Maxwell-lx/FixitEditor/releases)
+[下载FixitEditor](https://github.com/Maxwell-lx/FixitEditor/releases)
 
 如果有其他系统使用的需求，可以自行编译安装。
 
