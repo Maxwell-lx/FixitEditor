@@ -30,6 +30,7 @@ FixitEditor集成了
 编译之前，清空dist文件夹
 
 ```
+# ON Windows
 #【pyinstaller -w -i 图标ico文件的路径 主py文件 -p 打包路径】
 pyinstaller -w -i fav.ico main.py -y 
 python installer.py
