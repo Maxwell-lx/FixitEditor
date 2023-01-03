@@ -3,6 +3,7 @@
 test.py
 myconfig.json
 public
+.hugo_build.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
