@@ -17,7 +17,7 @@ FixitEditor集成了
 
   
 
-## 使用FixitEditor
+## 安装FixitEditor
 
 ### 1. windows上，下载解压即可用
 
@@ -37,7 +37,7 @@ python installer.py
 
 执行`python installer.py`过程中，如果出现` Permission denied`错误，就手动执行复制、重命名等操作。
 
-## 一、如何使用FixitEditor
+## 如何使用FixitEditor
 
 1. 下载FixitEditor，解压到任意目录，示例：`C:\FixitEditor`。
 
