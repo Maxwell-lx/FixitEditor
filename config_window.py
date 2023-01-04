@@ -1,4 +1,5 @@
 import json
+import os
 # pyqt
 from PyQt5 import QtWidgets
 # ui文件
@@ -16,6 +17,7 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
     def initUI(self):
         self.PB_saveconfig.clicked.connect(self.save_config)
         self.PB_loadconfig.clicked.connect(self.load_config)
+        self.PB_findsitepath.clicked.connect(self.findsitepath)
 
     def open(self):
         self.show()
@@ -62,3 +64,9 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
         self.LE_menu.setText(ut.list2str(config["menu"]))
 
         self.LE_license.setText(config["license"])
+
+    def findsitepath(self):
+        filePath = QtWidgets.QFileDialog.getExistingDirectory(None, '选择文件夹', os.getcwd())
+        ok = os.path.exists(filePath)
+        if ok:
+            self.LE_sitepath.setText(filePath.replace("/","\\"))

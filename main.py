@@ -38,6 +38,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionsave.setShortcut("CTRL+S")
         self.actionsave.triggered.connect(self.savefile)
         self.CB_isencryption.stateChanged.connect(self.setEncryptionMode)
+        self.actionnewsite.triggered.connect(self.newsite)
 
         # 快捷复制
         self.PB_suojin.clicked.connect(self.suojin)
@@ -58,6 +59,14 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionconfig.triggered.connect(self.Config.open)
         # 其他
         self.refresh_combox()
+
+    def newsite(self):
+        filePath = QtWidgets.QFileDialog.getExistingDirectory(None, '选择文件夹', os.getcwd())
+        ok = os.path.exists(filePath)
+        if ok:
+            disk = filePath[0]+":"
+            command = disk + " && cd "+ filePath +" && "+ os.getcwd() + "\\tools\\hugo.exe new site newsite && cd .\\newsite\\content && mkdir posts"
+            os.system(command)
 
     def newfile(self):
         value, ok = QtWidgets.QInputDialog.getText(self, "新建post", "请输入文件名:", QtWidgets.QLineEdit.Normal, "new post")
@@ -297,7 +306,6 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             os.system(command)
         else:
             os.popen(command)
-
 
     # --------------------退出-------------------------#
     def closeEvent(self, event):
