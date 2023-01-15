@@ -67,24 +67,21 @@
        <height>81</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0" columnminimumwidth="0,0,0">
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="LE_rsyncuser"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
+     <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0">
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="LE_cloudserver">
         <property name="text">
-         <string>Rsync 虚拟用户</string>
+         <string/>
+        </property>
+        <property name="placeholderText">
+         <string>192.168.1.1</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_15">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>e.g.:maxwell</string>
+         <string>Rsync 虚拟用户密码</string>
         </property>
        </widget>
       </item>
@@ -95,23 +92,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_12">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>e.g.:192.168.1.1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="LE_cloudserver"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>Rsync 虚拟用户密码</string>
+         <string>Rsync 虚拟用户</string>
         </property>
        </widget>
       </item>
@@ -121,6 +105,9 @@
          <enum>QLineEdit::Password</enum>
         </property>
        </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="LE_rsyncuser"/>
       </item>
      </layout>
     </widget>
@@ -147,46 +134,10 @@
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_5">
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="LE_menu"/>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_9">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>e.g.:目录1_目录2_目录3</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>目录(英文逗号分割)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLabel" name="label_10">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>e.g.:菜单1_菜单2_菜单3</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="LE_author"/>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="LE_categories"/>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>作者</string>
+       <widget class="QLineEdit" name="LE_author">
+        <property name="placeholderText">
+         <string>Bob</string>
         </property>
        </widget>
       </item>
@@ -197,23 +148,45 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_6">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="LE_categories">
+        <property name="placeholderText">
+         <string>目录1,目录2,目录3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="LE_menu">
+        <property name="placeholderText">
+         <string>菜单1,菜单2,菜单3</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Liscense</string>
+         <string>目录(英文逗号分割)</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="LE_license"/>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLabel" name="label_13">
-        <property name="enabled">
-         <bool>false</bool>
+       <widget class="QLineEdit" name="LE_license">
+        <property name="placeholderText">
+         <string>Bloger all rights reserved.</string>
         </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string>e.g.:Bloger all rights reserved.</string>
+         <string>作者</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Liscense</string>
         </property>
        </widget>
       </item>
@@ -257,12 +230,18 @@
         <property name="text">
          <string/>
         </property>
+        <property name="placeholderText">
+         <string>必填！</string>
+        </property>
        </widget>
       </item>
       <item row="1" column="1">
        <widget class="QLineEdit" name="LE_chrome">
         <property name="text">
          <string/>
+        </property>
+        <property name="placeholderText">
+         <string>空置，则打开默认浏览器</string>
         </property>
        </widget>
       </item>
@@ -279,7 +258,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>e.g.:C:\GoogleChrome\chrome.exe   </string>
+         <string>例:C:\GoogleChrome\chrome.exe   </string>
         </property>
        </widget>
       </item>
@@ -298,7 +277,7 @@
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>e.g.:D:\myblog   </string>
+           <string>例:D:\myblog   </string>
           </property>
          </widget>
         </item>

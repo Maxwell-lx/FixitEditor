@@ -2,10 +2,10 @@ import os
 import os.path
 import sys
 import json
-# pyqt
 import time
-
-from PyQt5 import QtWidgets
+import threading
+# pyqt
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox, QApplication
 # 模板替换
 from string import Template
@@ -18,6 +18,8 @@ from config_window import Config
 # 自定义
 import head_translate as headT
 import util as ut
+import resolver_forward as RF
+import resolver_backward as RB
 
 
 class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -39,6 +41,8 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionsave.triggered.connect(self.savefile)
         self.CB_isencryption.stateChanged.connect(self.setEncryptionMode)
         self.actionnewsite.triggered.connect(self.newsite)
+        self.CB_editlocal.stateChanged.connect(self.editchange)
+        self.CB_editlocal.setShortcut("CTRL+E")
 
         # 快捷复制
         self.PB_suojin.clicked.connect(self.suojin)
@@ -52,20 +56,36 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.PB_typeit.clicked.connect(self.typeit)
         self.PB_quote.clicked.connect(self.quote)
         self.PB_link.clicked.connect(self.link)
-        # 启动
+        # 服务
         self.PB_localserver.clicked.connect(self.localserver_start)
+        self.PB_localservershutdown.clicked.connect(self.localserver_shutdown)
         self.PB_cloudserver.clicked.connect(self.cloudserver)
         # 打开配置窗口
         self.actionconfig.triggered.connect(self.Config.open)
         # 其他
         self.refresh_combox()
 
+    def editchange(self):
+        if self.CB_editlocal.isChecked():
+            self.resize(950, 1010)
+            self.setMinimumSize(QtCore.QSize(950, 1010))
+            self.setMaximumSize(QtCore.QSize(950, 1010))
+            # 切换到本地编辑器，将tmp.md内容解析到本地
+            self.resolver_tmp2local()
+        else:
+            self.resize(270, 690)
+            self.setMinimumSize(QtCore.QSize(270, 690))
+            self.setMaximumSize(QtCore.QSize(270, 690))
+            # 切换到外部编辑器，将编辑内容转移到tmp.md，并保存。
+            # 逆解析
+            self.resolver_local2tmp()
+
     def newsite(self):
         filePath = QtWidgets.QFileDialog.getExistingDirectory(None, '选择文件夹', os.getcwd())
         ok = os.path.exists(filePath)
         if ok:
-            disk = filePath[0]+":"
-            command = disk + " && cd "+ filePath +" && "+ os.getcwd() + "\\tools\\hugo.exe new site newsite && cd .\\newsite\\content && mkdir posts"
+            disk = filePath[0] + ":"
+            command = disk + " && cd " + filePath + " && " + os.getcwd() + "\\tools\\hugo.exe new site newsite && cd .\\newsite\\content && mkdir posts"
             os.system(command)
 
     def newfile(self):
@@ -74,7 +94,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.refresh_combox()
             self.status_message("新建Post")
             self.LB_postname.setText(value + ".md")
-            self.LB_date.setText(ut.getdate())
+            self.LB_date.setText(ut.isodate2date_time(ut.getdate()))
             self.LE_title.setText(value)
         else:
             self.status_error("新建post失败")
@@ -84,7 +104,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         config = ut.loadconfig()
         dir_path = config["sitepath"] + "\\content\\posts\\"
         if not os.path.exists(dir_path):
-            self.status_error('不存在此路径：content\\posts\\')
+            self.status_error('网站路径错误！')
             return 0
         fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", dir_path, "Markdown (*.md)")
         if ok:
@@ -99,8 +119,8 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 head_dict = headT.head2json(fulltext_list[0])
                 # 写入编辑器界面
                 self.LB_postname.setText(fname.split('/')[-1])
-                self.LB_date.setText(head_dict["date"])
-                self.LB_lastmod.setText(head_dict["lastmod"])
+                self.LB_date.setText(ut.isodate2date_time(head_dict["date"]))
+                self.LB_lastmod.setText(ut.isodate2date_time(head_dict["lastmod"]))
                 self.status_message("加载Post成功！")
                 self.LE_title.setText(head_dict["title"])
                 self.LE_subtitle.setText(head_dict["subtitle"])
@@ -145,22 +165,50 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             else:
                 self.status_error('不支持的文件类型，或文件头不匹配！')
 
+    # 从tmp.md，解析到本地编辑器
+    def resolver_tmp2local(self):
+        fname = 'tmp.md'
+        with open(fname, 'r', encoding='utf-8') as f:
+            fulltext = f.read()
+        if "****\n" in fulltext:  # tmp.md摘要分割,"****"
+            fulltext_list = fulltext.split("****\n")
+            # 摘要
+            self.TE_abstract.setPlainText(RF.resolver_forward(fulltext_list[0]))
+            # 正文
+            self.TE_editor.setPlainText(RF.resolver_forward(fulltext_list[1]))
+        else:
+            self.status_error('文件头不匹配！')
+
+    def resolver_local2tmp(self):
+        file = open('tmp.md', mode='w')
+        abstract = RB.resolver_backward(self.TE_abstract.toPlainText())
+        context = RB.resolver_backward(self.TE_editor.toPlainText())
+        if len(abstract) == 0 or abstract[-1] != '\n':
+            abstract += '\n'
+        file.write(abstract + "****\n" + context)
+        file.close()
+        ut.gb2utf8('tmp.md')
+        # 打开文件
+        os.popen('start "" "tmp.md"')
+
     def savefile(self):
         config = ut.loadconfig()
         if len(self.LB_postname.text()) == 0:
             self.status_error('当前Post为空，请加载或新建Post！')
+        elif not os.path.exists(config["sitepath"] + '\\content\\posts\\'):
+            self.status_error('网站路径错误！')
+            return
         else:
             savePath = config["sitepath"] + '\\content\\posts\\' + self.LB_postname.text()
             class_file = open(savePath, 'w')
-            self.LB_lastmod.setText(ut.getdate())
+            self.LB_lastmod.setText(ut.isodate2date_time(ut.getdate()))
             self.status_message("保存成功！")
-            head1_tmpl = open('head1.tmpl', 'r')
-            menu_tmpl = open('menu.tmpl', 'r')
-            head2_tmpl = open('head2.tmpl', 'r')
+            head1_tmpl = open('tmpls\\head1.tmpl', 'r')
+            menu_tmpl = open('tmpls\\menu.tmpl', 'r')
+            head2_tmpl = open('tmpls\\head2.tmpl', 'r')
             head1_ = Template(head1_tmpl.read())
             menu_ = Template(menu_tmpl.read())
             head2_ = Template(head2_tmpl.read())
-
             mypost = []
             config = ut.loadconfig()
             mypost.append(head1_.substitute(
@@ -174,17 +222,16 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 password=self.LE_password.text() if self.CB_isencryption.isChecked() else "",
                 message=self.LE_password_tip.text(),
                 author=config["author"],
-                date=self.LB_date.text(),
-                lastmod=self.LB_lastmod.text()))
+                date=ut.date_time2isodate(self.LB_date.text()),
+                lastmod=ut.date_time2isodate(self.LB_lastmod.text())))
             if len(self.CoB_menu.currentText()) > 0:
                 mypost.append(menu_.substitute(
                     menu_flag="menu_y",
                     menu=self.CoB_menu.currentText()))
             else:
                 mypost.append('#menu_n\n')
-            mypost.append(head2_.substitute(
-                abstract=self.TE_abstract.toPlainText(),
-                editor=self.TE_editor.toPlainText()))
+
+            mypost.append(head2_.substitute(abstract=self.TE_abstract.toPlainText(), editor=self.TE_editor.toPlainText()))
 
             # 将代码写入文件
             class_file.writelines(mypost)
@@ -238,45 +285,28 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pyperclip.copy("{{< highlight html >}}\n\n{{< /highlight >}}")
 
     def image(self):
-        pyperclip.copy('{{< image src="/images/lighthouse.jpg" caption="Lighthouse" width=400 linked=false >}}')
+        pyperclip.copy('{{< image src="image_url" caption="image_caption" width=400 linked=false >}}')
 
     def admonition(self):
-        pyperclip.copy('{{< admonition type=tip title="This is a tip" open=false >}}\n一个 **技巧** 横幅\n{{< /admonition >}}')
+        pyperclip.copy('{{< admonition type=tip title="This is a tip" open=true >}}\n一个 **技巧** 横幅\n{{< /admonition >}}')
 
     def mermaid(self):
-        pyperclip.copy('''
-        {{< mermaid >}}
-        gantt
-        dateFormat  YYYY-MM-DD
-        title Adding GANTT diagram to mermaid
-        
-        section A section
-        Completed task            :done,    des1, 2014-01-06,2014-01-08
-          Active task               :active,  des2, 2014-01-09, 3d
-          Future task               :         des3, after des2, 5d
-          Future task2              :         des4, after des3, 5d
-          {{< /mermaid >}}')
-        ''')
+        pyperclip.copy('{{< mermaid >}}\n\n{{< /mermaid >}}')
 
     def echart(self):
-        pyperclip.copy('{{< echarts >}}\njson\n{{< /echarts >}}')
+        pyperclip.copy('{{< echarts >}}\n\n{{< /echarts >}}')
 
     def bilibili(self):
         pyperclip.copy('{{< bilibili BV1Sx411T7QQ >}}')
 
     def typeit(self):
-        pyperclip.copy('{{< typeit >}}\n这一个带有基于 [TypeIt](https://typeitjs.com/) 的 **打字动画** 的 *段落* ...\n{{< /typeit >}}')
+        pyperclip.copy('{{< typeit >}}\n\n{{< /typeit >}}')
 
     def quote(self):
-        pyperclip.copy('''
-        {{ <center-quote>}}
-        **hello** *world*
-        this is a center - quote shortcode example.
-        {{ </center-quote>}}
-        ''')
+        pyperclip.copy('{{ <center-quote>}}\n\n{{ </center-quote>}}')
 
     def link(self):
-        pyperclip.copy('{{< link href="https://github.com/hugo-fixit/FixIt" content="FixIt Theme" title="source of FixIt Theme" card=true download="/mainsitehead.md">}}')
+        pyperclip.copy('{{< link href="href" content="content" card=true download="">}}')
 
     # ----------------------server-------------------------#
     def localserver_start(self):
@@ -288,6 +318,11 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             os.system(command)
         else:
             os.popen(command)
+
+    def localserver_shutdown(self):
+        self.status_message("关闭本地服务")
+        command="taskkill /F /im  hugo.exe"
+        os.popen(command)
 
     def cloudserver(self):
         self.status_message("同步到云")
@@ -316,10 +351,6 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             event.accept()
         else:
             event.ignore()
-
-
-# -----------------------其他------------------------#
-# def addItemIfNotEqual(self):
 
 
 if __name__ == '__main__':

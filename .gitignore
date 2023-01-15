@@ -4,6 +4,7 @@ test.py
 myconfig.json
 public
 .hugo_build.lock
+rsync.passwd
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
