@@ -35,7 +35,7 @@ pyinstaller -w -i fav.ico main.py -y
 python installer.py
 ```
 
-编译后的文件位于`.\dist\FixitEditor`。
+编译后的文件位于`.\dist\FixitEditor`,
 
 ## 3.如何使用FixitEditor
 

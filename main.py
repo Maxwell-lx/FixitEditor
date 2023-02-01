@@ -253,7 +253,6 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     #   云   "网站目录\static\image\"+文件名 修改为 "http://110.110.110.110:port/"+图片名
     def url_transfer(self, ss):
         config = ut.loadconfig()
-        print(config["imageserver_enable"])
         ss_list = ss.split('\n')
         for i in range(len(ss_list)):
             line = ss_list[i].replace(' ', '')
@@ -280,7 +279,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     filename = ut.islocalpath(ut.get_in_between(line, 'src="', '"'))
                     abs_path = config["sitepath"] + '\\static\\image\\' + filename
                     os.popen('copy ' + ut.get_in_between(line, 'src="', '"') + " " + abs_path)
-                    url = 'http://'+config["imageserver"]+'/' + filename
+                    url = 'http://' + config["imageserver"] + '/' + filename
                     ss_list[i] = '{{< image src="' + url + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
                     self.status_message('图片已转储到网站 ' + filename)
                 # 网站地址转化为http地址，文件无变动
@@ -294,18 +293,22 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     # 本地编辑器 解析到 tmp.md
     # 修改图片url 例:"/image/"+图片名 修改为 "网站目录\static\image\"+文件名
-    def url_transfer_local(self,ss):
+    def url_transfer_local(self, ss):
         config = ut.loadconfig()
         ss_list = ss.split('\n')
         for i in range(len(ss_list)):
             line = ss_list[i].replace(' ', '')
-            if line[0:8] == "{{<image" and ut.get_in_between(line, 'src="', '"')[0:7] == '/image/':
-                filename = ut.get_in_between(line, 'src="', '"')[7:]
+            if line[0:8] == "{{<image" and ut.iswebsitepath(ut.get_in_between(line, 'src="', '"')):
+                filename = ut.iswebsitepath(ut.get_in_between(line, 'src="', '"'))
+                abs_path = config["sitepath"] + '\\static\\image\\' + filename
+                ss_list[i] = '{{< image src="' + abs_path + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                self.status_message('图片切换到本地路径 ' + filename)
+            if line[0:8] == "{{<image" and ut.ishttppath(ut.get_in_between(line, 'src="', '"')):
+                filename = ut.ishttppath(ut.get_in_between(line, 'src="', '"'))
                 abs_path = config["sitepath"] + '\\static\\image\\' + filename
                 ss_list[i] = '{{< image src="' + abs_path + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
                 self.status_message('图片切换到本地路径 ' + filename)
         return "\n".join(ss_list)
-
 
     def refresh_combox(self):
         config = ut.loadconfig()
@@ -350,7 +353,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pyperclip.copy("&nbsp;")
 
     def highlight(self):
-        pyperclip.copy("{{< highlight html >}}\n\n{{< /highlight >}}")
+        pyperclip.copy("{{< highlight text >}}\n\n{{< /highlight >}}")
 
     def image(self):
         pyperclip.copy('{{< image src="image_url" caption="image_caption" width=400 linked=false >}}')
@@ -396,7 +399,6 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             os.popen(command)
 
-
     def cloudserver(self):
         self.status_message("同步到云：执行")
         config = ut.loadconfig()
@@ -413,16 +415,16 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 "cloudserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
             command1 = 'cd ' + config["sitepath"] + " && " + os.getcwd() + "\\tools\\hugo.exe" + " && " + rsync_cmd
         else:
-            command1 = " "
+            command1 = "echo cannot_sync_cloudserver"
 
         # 向静态资源服务器同步
-        if ut.isIP(config["staticserver"]):
+        if config["imageserver_enable"]:
             sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
-            rsync_image_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/static/image  " + config["rsyncuser"] + "@" + config[
-                "staticserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
+            rsync_image_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/static/image  " + config["rsyncuser"] + "@" + \
+                              ut.getIPonly(config["imageserver"]) + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
             command2 = 'cd ' + config["sitepath"] + " && " + rsync_image_cmd
         else:
-            command2 = " "
+            command2 = "echo cannot_sync_imageserver"
 
         command = command1 + " && " + command2
         if self.CB_cloudserver_showcmd.isChecked():

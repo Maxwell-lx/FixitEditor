@@ -88,6 +88,20 @@ def isIP(ip_str):
             return False
     return True
 
+# 输入 192.168.1.1 或 192.168.1.1:8090
+# 输出 192.168.1.1
+def getIPonly(ip_str):
+    if isIP(ip_str):
+        ip_list = ip_str.split('.')
+        if ':' in ip_list[3]:
+            ip_list[3] = ip_list[3].split(':')[0]
+            return '.'.join(ip_list)
+        else:
+            return ip_str
+    else:
+        return False
+
+
 def islocalpath(path_str):
     if os.path.exists(path_str):
         return os.path.basename(path_str)

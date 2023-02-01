@@ -24,9 +24,9 @@ keywords = {
               'resolve': '![$1]($0 "$2")',
               'para_prefix': ['src="', 'caption="', 'width='],
               'para_suffix': ['"', '"', ' ']},
-    'echart': {'para_num': 0,
+    'echarts': {'para_num': 0,
                'content': True,
-               'resolve': "```echart\n$c\n```"},
+               'resolve': "```echarts\n$c\n```"},
     'center-quote': {'para_num': 0,
                      'content': True,
                      'resolve': "```quote\n$c\n```"},
@@ -67,7 +67,7 @@ def resolver_backward(local):
                 flag = False
         else:
             list_mask.append(flag)
-    # print(list_mask)
+    print(list_mask)
     # 解析
     new_list = []
     buffer_list = []
