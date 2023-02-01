@@ -18,6 +18,8 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
         self.PB_saveconfig.clicked.connect(self.save_config)
         self.PB_loadconfig.clicked.connect(self.load_config)
         self.PB_findsitepath.clicked.connect(self.findsitepath)
+        self.CB_enableimagebed.clicked.connect(self.checkimageserverIP)
+        self.LE_imageserver.textChanged.connect(self.checkimageserverIP)
 
     def open(self):
         self.show()
@@ -29,8 +31,9 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
         config_dict = {}
         config_dict["sitepath"] = self.LE_sitepath.text().strip()
         config_dict["chrome"] = self.LE_chrome.text().strip()
-
         config_dict["cloudserver"] = self.LE_cloudserver.text().strip()
+        config_dict["imageserver"] = self.LE_imageserver.text().strip()
+        config_dict["imageserver_enable"] = True if self.CB_enableimagebed.isChecked() else False
         config_dict["rsyncuser"] = self.LE_rsyncuser.text().strip()
         config_dict["rsyncuserpasswd"] = self.LE_rsyncuserpasswd.text().strip()
 
@@ -56,6 +59,11 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
         self.LE_sitepath.setText(config["sitepath"])
         self.LE_chrome.setText(config["chrome"])
         self.LE_cloudserver.setText(config["cloudserver"])
+        self.LE_imageserver.setText(config["imageserver"])
+        if config["imageserver_enable"]:
+            self.CB_enableimagebed.setChecked(True)
+        else:
+            self.CB_enableimagebed.setChecked(False)
         self.LE_rsyncuser.setText(config["rsyncuser"])
         self.LE_rsyncuserpasswd.setText(config["rsyncuserpasswd"])
 
@@ -70,3 +78,7 @@ class Config(QtWidgets.QMainWindow, Ui_Config):
         ok = os.path.exists(filePath)
         if ok:
             self.LE_sitepath.setText(filePath.replace("/","\\"))
+
+    def checkimageserverIP(self):
+        if not ut.isIP(self.LE_imageserver.text()):
+            self.CB_enableimagebed.setChecked(False)

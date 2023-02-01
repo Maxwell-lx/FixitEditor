@@ -3,7 +3,6 @@ import os.path
 import sys
 import json
 import time
-import threading
 # pyqt
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox, QApplication
@@ -39,10 +38,10 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionload_post.triggered.connect(self.loadfile)
         self.actionsave.setShortcut("CTRL+S")
         self.actionsave.triggered.connect(self.savefile)
-        self.CB_isencryption.stateChanged.connect(self.setEncryptionMode)
+        self.CB_isencryption.clicked.connect(self.setEncryptionMode)
         self.actionnewsite.triggered.connect(self.newsite)
-        self.CB_editlocal.stateChanged.connect(self.editchange)
-        self.CB_editlocal.setShortcut("CTRL+E")
+        self.actionlocaledit.setShortcut("CTRL+E")
+        self.actionlocaledit.triggered.connect(self.editchange_new)
 
         # 快捷复制
         self.PB_suojin.clicked.connect(self.suojin)
@@ -65,46 +64,51 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # 其他
         self.refresh_combox()
 
-    def editchange(self):
-        if self.CB_editlocal.isChecked():
+    def editchange_new(self):
+        if self.actionlocaledit.isChecked():
+            self.status_message("编辑器：切换到本地")
             self.resize(950, 1010)
             self.setMinimumSize(QtCore.QSize(950, 1010))
             self.setMaximumSize(QtCore.QSize(950, 1010))
             # 切换到本地编辑器，将tmp.md内容解析到本地
             self.resolver_tmp2local()
         else:
-            self.resize(270, 690)
-            self.setMinimumSize(QtCore.QSize(270, 690))
-            self.setMaximumSize(QtCore.QSize(270, 690))
+            self.status_message("编辑器：切换到外部")
+            self.resize(270, 1010)
+            self.setMinimumSize(QtCore.QSize(270, 1010))
+            self.setMaximumSize(QtCore.QSize(270, 1010))
             # 切换到外部编辑器，将编辑内容转移到tmp.md，并保存。
             # 逆解析
             self.resolver_local2tmp()
 
     def newsite(self):
         filePath = QtWidgets.QFileDialog.getExistingDirectory(None, '选择文件夹', os.getcwd())
-        ok = os.path.exists(filePath)
-        if ok:
+        if os.path.exists(filePath):
             disk = filePath[0] + ":"
-            command = disk + " && cd " + filePath + " && " + os.getcwd() + "\\tools\\hugo.exe new site newsite && cd .\\newsite\\content && mkdir posts"
+            command = disk + " && cd " + filePath + " && " + os.getcwd() + "\\tools\\hugo.exe new site newsite && " \
+                                                                           "cd .\\newsite\\content && mkdir posts && " \
+                                                                           "cd .. && cd static && mkdir image"
             os.system(command)
 
     def newfile(self):
         value, ok = QtWidgets.QInputDialog.getText(self, "新建post", "请输入文件名:", QtWidgets.QLineEdit.Normal, "new post")
         if ok:
             self.refresh_combox()
-            self.status_message("新建Post")
+            self.status_message("新建：新建Post")
             self.LB_postname.setText(value + ".md")
             self.LB_date.setText(ut.isodate2date_time(ut.getdate()))
             self.LE_title.setText(value)
+            self.TE_abstract.setPlainText('')
+            self.TE_editor.setPlainText('')
         else:
-            self.status_error("新建post失败")
+            self.status_error("新建：新建post失败")
 
     def loadfile(self):
         self.refresh_combox()
         config = ut.loadconfig()
         dir_path = config["sitepath"] + "\\content\\posts\\"
         if not os.path.exists(dir_path):
-            self.status_error('网站路径错误！')
+            self.status_error('加载：网站路径错误！')
             return 0
         fname, ok = QtWidgets.QFileDialog.getOpenFileName(self, "选择文件", dir_path, "Markdown (*.md)")
         if ok:
@@ -121,7 +125,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.LB_postname.setText(fname.split('/')[-1])
                 self.LB_date.setText(ut.isodate2date_time(head_dict["date"]))
                 self.LB_lastmod.setText(ut.isodate2date_time(head_dict["lastmod"]))
-                self.status_message("加载Post成功！")
+                self.status_message("加载：Post加载成功！")
                 self.LE_title.setText(head_dict["title"])
                 self.LE_subtitle.setText(head_dict["subtitle"])
                 self.LE_imgeurl.setText(head_dict["featuredImage"])
@@ -163,26 +167,22 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 # 正文
                 self.TE_editor.setPlainText(main_text)
             else:
-                self.status_error('不支持的文件类型，或文件头不匹配！')
+                self.status_error('加载：不支持的文件类型或文件头不匹配！')
 
-    # 从tmp.md，解析到本地编辑器
     def resolver_tmp2local(self):
-        fname = 'tmp.md'
-        with open(fname, 'r', encoding='utf-8') as f:
+        with open('tmp.md', 'r', encoding='utf-8') as f:
             fulltext = f.read()
         if "****\n" in fulltext:  # tmp.md摘要分割,"****"
             fulltext_list = fulltext.split("****\n")
-            # 摘要
-            self.TE_abstract.setPlainText(RF.resolver_forward(fulltext_list[0]))
-            # 正文
-            self.TE_editor.setPlainText(RF.resolver_forward(fulltext_list[1]))
+            self.TE_abstract.setPlainText(RF.resolver_forward(fulltext_list[0]))  # 摘要
+            self.TE_editor.setPlainText(RF.resolver_forward(fulltext_list[1]))  # 正文
         else:
-            self.status_error('文件头不匹配！')
+            self.status_error('解析：文件头不匹配！')
 
     def resolver_local2tmp(self):
         file = open('tmp.md', mode='w')
-        abstract = RB.resolver_backward(self.TE_abstract.toPlainText())
-        context = RB.resolver_backward(self.TE_editor.toPlainText())
+        abstract = RB.resolver_backward(self.url_transfer_local(self.TE_abstract.toPlainText()))
+        context = RB.resolver_backward(self.url_transfer_local(self.TE_editor.toPlainText()))
         if len(abstract) == 0 or abstract[-1] != '\n':
             abstract += '\n'
         file.write(abstract + "****\n" + context)
@@ -194,15 +194,15 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def savefile(self):
         config = ut.loadconfig()
         if len(self.LB_postname.text()) == 0:
-            self.status_error('当前Post为空，请加载或新建Post！')
+            self.status_error('保存：当前Post为空，请加载或新建Post！')
         elif not os.path.exists(config["sitepath"] + '\\content\\posts\\'):
-            self.status_error('网站路径错误！')
+            self.status_error('保存：网站路径错误！')
             return
         else:
             savePath = config["sitepath"] + '\\content\\posts\\' + self.LB_postname.text()
             class_file = open(savePath, 'w')
             self.LB_lastmod.setText(ut.isodate2date_time(ut.getdate()))
-            self.status_message("保存成功！")
+            self.status_message("保存：成功！")
             head1_tmpl = open('tmpls\\head1.tmpl', 'r')
             menu_tmpl = open('tmpls\\menu.tmpl', 'r')
             head2_tmpl = open('tmpls\\head2.tmpl', 'r')
@@ -230,7 +230,12 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     menu=self.CoB_menu.currentText()))
             else:
                 mypost.append('#menu_n\n')
-
+            # 摘要和正文
+            if not self.actionlocaledit.isChecked():
+                self.resolver_tmp2local()
+            # 将摘要和正文中的本地图片，'c:\ d:\'开头的本地路径，替换成网站image文件夹  '/image/xxx.png'
+            self.TE_abstract.setPlainText(self.url_transfer(self.TE_abstract.toPlainText()))
+            self.TE_editor.setPlainText(self.url_transfer(self.TE_editor.toPlainText()))
             mypost.append(head2_.substitute(abstract=self.TE_abstract.toPlainText(), editor=self.TE_editor.toPlainText()))
 
             # 将代码写入文件
@@ -239,15 +244,78 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             # 转码
             ut.gb2utf8(savePath)
 
+    # tmp.md 解析到 本地编辑器
+    # 如果此时url为本地路径，则文件转储，同时修改图片url 为 网站url或 云url
+    # 如果此时url为网站url或云url，则配置文件中设置的保存位置，调整为云url或网站url
+    # 1.文件转储，将<< image >>标签中的图片url转储 目标 "网站目录\static\image\"+文件名
+    # 2.修改图片url，图片一共有三个储存区域：本地，网站，图床服务器
+    #   网站 "网站目录\static\image\"+文件名 修改为 "/image/"+图片名
+    #   云   "网站目录\static\image\"+文件名 修改为 "http://110.110.110.110:port/"+图片名
+    def url_transfer(self, ss):
+        config = ut.loadconfig()
+        print(config["imageserver_enable"])
+        ss_list = ss.split('\n')
+        for i in range(len(ss_list)):
+            line = ss_list[i].replace(' ', '')
+            # 图片保存在网站
+            if line[0:8] == "{{<image" and not config["imageserver_enable"]:
+                # 本地地址转化为网站地址，同时将文件转储到网站
+                if ut.islocalpath(ut.get_in_between(line, 'src="', '"')) != False:
+                    filename = ut.islocalpath(ut.get_in_between(line, 'src="', '"'))
+                    abs_path = config["sitepath"] + '\\static\\image\\' + filename
+                    os.popen('copy ' + ut.get_in_between(line, 'src="', '"') + " " + abs_path)
+                    url = '/image/' + filename
+                    ss_list[i] = '{{< image src="' + url + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                    self.status_message('图片已转储到网站 ' + filename)
+                # http地址转化为网站地址，文件无变动
+                if ut.ishttppath(ut.get_in_between(line, 'src="', '"')) != False:
+                    filename = ut.ishttppath(ut.get_in_between(line, 'src="', '"'))
+                    url = '/image/' + filename
+                    ss_list[i] = '{{< image src="' + url + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                    self.status_message('图片已转储到网站 ' + filename)
+            # 图片保存在云
+            if line[0:8] == "{{<image" and config["imageserver_enable"]:
+                # 本地地址转化为云地址，同时将文件转储到网站
+                if ut.islocalpath(ut.get_in_between(line, 'src="', '"')) != False:
+                    filename = ut.islocalpath(ut.get_in_between(line, 'src="', '"'))
+                    abs_path = config["sitepath"] + '\\static\\image\\' + filename
+                    os.popen('copy ' + ut.get_in_between(line, 'src="', '"') + " " + abs_path)
+                    url = 'http://'+config["imageserver"]+'/' + filename
+                    ss_list[i] = '{{< image src="' + url + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                    self.status_message('图片已转储到网站 ' + filename)
+                # 网站地址转化为http地址，文件无变动
+                if ut.iswebsitepath(ut.get_in_between(line, 'src="', '"')) != False:
+                    filename = ut.iswebsitepath(ut.get_in_between(line, 'src="', '"'))
+                    url = 'http://' + config["imageserver"] + '/' + filename
+                    ss_list[i] = '{{< image src="' + url + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                    self.status_message('图片已转储到网站 ' + filename)
+
+        return "\n".join(ss_list)
+
+    # 本地编辑器 解析到 tmp.md
+    # 修改图片url 例:"/image/"+图片名 修改为 "网站目录\static\image\"+文件名
+    def url_transfer_local(self,ss):
+        config = ut.loadconfig()
+        ss_list = ss.split('\n')
+        for i in range(len(ss_list)):
+            line = ss_list[i].replace(' ', '')
+            if line[0:8] == "{{<image" and ut.get_in_between(line, 'src="', '"')[0:7] == '/image/':
+                filename = ut.get_in_between(line, 'src="', '"')[7:]
+                abs_path = config["sitepath"] + '\\static\\image\\' + filename
+                ss_list[i] = '{{< image src="' + abs_path + '" caption=' + ut.get_in_between(ss_list[i], 'caption=', ">}}") + " >}}"
+                self.status_message('图片切换到本地路径 ' + filename)
+        return "\n".join(ss_list)
+
+
     def refresh_combox(self):
         config = ut.loadconfig()
         self.CoB_category.clear()
-        self.CoB_category.addItems([""])  # 添加空元素
+        self.CoB_category.addItems(["未分类"])  # 添加空元素 未分类
         self.CoB_category.addItems(config["categories"])
         self.CoB_menu.clear()
         self.CoB_menu.addItems([""])  # 添加空元素
         self.CoB_menu.addItems(config["menu"])
-        self.status_message("已加载配置")
+        self.status_message("UI：已加载配置到UI")
 
     def setEncryptionMode(self):
         if self.CB_isencryption.isChecked():
@@ -263,16 +331,16 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     # ----------------------状态栏--------------------------#
     def status_message(self, words):
-        self.LB_status.setText(words + " " + ut.gettime())
-        self.LB_status.setStyleSheet("color:rgb(0, 0, 0)")
+        text = "MSG:" + words + " " + ut.gettime() + '\n' + self.TE_debug.toPlainText()
+        self.TE_debug.setPlainText(text)
 
     def status_warning(self, words):
-        self.LB_status.setText(words + " " + ut.gettime())
-        self.LB_status.setStyleSheet("color:rgb(255, 255, 0)")
+        text = "WRN:" + words + " " + ut.gettime() + '\n' + self.TE_debug.toPlainText()
+        self.TE_debug.setPlainText(text)
 
     def status_error(self, words):
-        self.LB_status.setText(words + " " + ut.gettime())
-        self.LB_status.setStyleSheet("color:rgb(255, 0, 0)")
+        text = "ERR:" + words + " " + ut.gettime() + '\n' + self.TE_debug.toPlainText()
+        self.TE_debug.setPlainText(text)
 
     # ----------------------一键复制-----------------------#
     def suojin(self):
@@ -303,40 +371,60 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pyperclip.copy('{{< typeit >}}\n\n{{< /typeit >}}')
 
     def quote(self):
-        pyperclip.copy('{{ <center-quote>}}\n\n{{ </center-quote>}}')
+        pyperclip.copy('{{< center-quote >}}\n\n{{< /center-quote >}}')
 
     def link(self):
         pyperclip.copy('{{< link href="href" content="content" card=true download="">}}')
 
     # ----------------------server-------------------------#
     def localserver_start(self):
-        self.status_message("启动本地服务")
+        self.status_message("本地服务：启动")
         config = ut.loadconfig()
         fastRender = "--disableFastRender" if self.CB_fastRender.isChecked() else ""
         command = 'cd ' + config["sitepath"] + ' && start "' + config["chrome"] + '" http://127.0.0.1:1313 && ' + os.getcwd() + "\\tools\\hugo.exe server -p 1313 " + fastRender
+        # if self.CB_localserver_showcmd.isChecked():
+        #     os.system(command)
+        # else:
+        #     os.popen(command)
+        os.popen(command)
+
+    def localserver_shutdown(self):
+        self.status_message("本地服务：关闭")
+        command = "taskkill /F /im  hugo.exe"
         if self.CB_localserver_showcmd.isChecked():
             os.system(command)
         else:
             os.popen(command)
 
-    def localserver_shutdown(self):
-        self.status_message("关闭本地服务")
-        command="taskkill /F /im  hugo.exe"
-        os.popen(command)
 
     def cloudserver(self):
-        self.status_message("同步到云")
+        self.status_message("同步到云：执行")
         config = ut.loadconfig()
         # 覆盖式创建密码文件
         f = open('rsync.passwd', 'w+')
         f.write(config["rsyncuserpasswd"])
         f.close()
         time.sleep(0.2)
+
         # 向云服务器同步
-        sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
-        rsync_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/public  " + config["rsyncuser"] + "@" + config[
-            "cloudserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
-        command = 'cd ' + config["sitepath"] + " && " + os.getcwd() + "\\tools\\hugo.exe" + " && " + rsync_cmd
+        if ut.isIP(config["cloudserver"]):
+            sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
+            rsync_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/public  " + config["rsyncuser"] + "@" + config[
+                "cloudserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
+            command1 = 'cd ' + config["sitepath"] + " && " + os.getcwd() + "\\tools\\hugo.exe" + " && " + rsync_cmd
+        else:
+            command1 = " "
+
+        # 向静态资源服务器同步
+        if ut.isIP(config["staticserver"]):
+            sitepath_cyg = ut.winpath2cygpath(config["sitepath"])
+            rsync_image_cmd = os.getcwd() + "\\tools\\rsync.exe -avz --port=873 --delete --progress " + sitepath_cyg + "/static/image  " + config["rsyncuser"] + "@" + config[
+                "staticserver"] + "::myblog/ --password-file=" + ut.winpath2cygpath(os.getcwd()) + "/rsync.passwd"
+            command2 = 'cd ' + config["sitepath"] + " && " + rsync_image_cmd
+        else:
+            command2 = " "
+
+        command = command1 + " && " + command2
         if self.CB_cloudserver_showcmd.isChecked():
             os.system(command)
         else:
@@ -344,7 +432,7 @@ class InitMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     # --------------------退出-------------------------#
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, '退出Fixit-Editor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = QMessageBox.question(self, '退出FixitEditor', "现在退出？", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             # 关闭其他子窗口
             self.Config.close()

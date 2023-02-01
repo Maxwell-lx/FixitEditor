@@ -2,6 +2,8 @@
     "sitepath": "G:\\Hugo\\myblog",
     "chrome": "",
     "cloudserver": "",
+    "imageserver": "192.168.1.1:8090",
+    "imageserver_enable": false,
     "rsyncuser": "",
     "rsyncuserpasswd": "",
     "author": "",

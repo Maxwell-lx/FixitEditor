@@ -560,9 +560,9 @@
     <property name="geometry">
      <rect>
       <x>270</x>
-      <y>0</y>
+      <y>100</y>
       <width>671</width>
-      <height>981</height>
+      <height>881</height>
      </rect>
     </property>
     <property name="font">
@@ -580,7 +580,7 @@
        <x>10</x>
        <y>20</y>
        <width>651</width>
-       <height>951</height>
+       <height>851</height>
       </rect>
      </property>
     </widget>
@@ -1627,7 +1627,7 @@
       <item row="0" column="1">
        <widget class="QLabel" name="LB_postname">
         <property name="text">
-         <string/>
+         <string>没有文件！</string>
         </property>
        </widget>
       </item>
@@ -1643,7 +1643,7 @@
          </font>
         </property>
         <property name="text">
-         <string>文件名</string>
+         <string>当前文件</string>
         </property>
        </widget>
       </item>
@@ -1763,13 +1763,6 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
-       <widget class="QPushButton" name="PB_cloudserver">
-        <property name="text">
-         <string>同步到云</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,1">
         <item>
@@ -1800,6 +1793,13 @@
         </item>
        </layout>
       </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="PB_cloudserver">
+        <property name="text">
+         <string>同步到云</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -1809,47 +1809,23 @@
       <x>10</x>
       <y>0</y>
       <width>251</width>
-      <height>111</height>
+      <height>101</height>
      </rect>
     </property>
     <property name="title">
      <string>状态</string>
     </property>
-    <widget class="QWidget" name="gridLayoutWidget">
+    <widget class="QWidget" name="gridLayoutWidget_3">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>21</y>
+       <y>20</y>
        <width>231</width>
-       <height>82</height>
+       <height>71</height>
       </rect>
      </property>
-     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" columnstretch="1,4">
-      <item row="2" column="1">
-       <widget class="QLabel" name="LB_status">
-        <property name="styleSheet">
-         <string notr="true">color:rgb(255, 0, 0)</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>状态栏</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_20">
-        <property name="text">
-         <string>最后修改</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
+     <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,5">
+      <item row="0" column="1">
        <widget class="QLabel" name="LB_date">
         <property name="font">
          <font>
@@ -1864,7 +1840,21 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_19">
+        <property name="text">
+         <string>创建</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_20">
+        <property name="text">
+         <string>最后修改</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
        <widget class="QLabel" name="LB_lastmod">
         <property name="font">
          <font>
@@ -1879,33 +1869,16 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_19">
-        <property name="text">
-         <string>创建</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="CB_editlocal">
-        <property name="text">
-         <string>本地编辑</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>670</y>
-      <width>251</width>
-      <height>311</height>
+      <x>270</x>
+      <y>0</y>
+      <width>671</width>
+      <height>101</height>
      </rect>
     </property>
     <property name="font">
@@ -1922,11 +1895,33 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>231</width>
-       <height>281</height>
+       <width>651</width>
+       <height>71</height>
       </rect>
      </property>
     </widget>
+   </widget>
+   <widget class="QPlainTextEdit" name="TE_debug">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>670</y>
+      <width>251</width>
+      <height>301</height>
+     </rect>
+    </property>
+    <property name="undoRedoEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="lineWrapMode">
+     <enum>QPlainTextEdit::NoWrap</enum>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="backgroundVisible">
+     <bool>false</bool>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -1952,6 +1947,8 @@
      <string>网站</string>
     </property>
     <addaction name="actionnewsite"/>
+    <addaction name="actionimage2local"/>
+    <addaction name="actionimage2bed"/>
    </widget>
    <widget class="QMenu" name="menu_3">
     <property name="title">
@@ -1959,9 +1956,16 @@
     </property>
     <addaction name="actionconfig"/>
    </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>编辑</string>
+    </property>
+    <addaction name="actionlocaledit"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
   </widget>
   <action name="actionnew">
    <property name="text">
@@ -1986,6 +1990,36 @@
   <action name="actionconfig">
    <property name="text">
     <string>配置config</string>
+   </property>
+  </action>
+  <action name="actionimage2local">
+   <property name="text">
+    <string>图片切到本地(待做)</string>
+   </property>
+   <property name="toolTip">
+    <string>image2local</string>
+   </property>
+  </action>
+  <action name="actionimage2bed">
+   <property name="text">
+    <string>图片切到图床(待做)</string>
+   </property>
+   <property name="toolTip">
+    <string>image2bed</string>
+   </property>
+  </action>
+  <action name="actionlocaledit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>本地编辑</string>
+   </property>
+   <property name="toolTip">
+    <string>localedit</string>
    </property>
   </action>
  </widget>

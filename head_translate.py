@@ -1,10 +1,5 @@
 import json
 
-
-# 头文件以：冒号+空格为分割
-#         除了menu功能以外，其他功能均单行存在
-#         加载范围：从title到menu
-
 def _getstrvalue(s):
     temp = s.split(': ')[1]
     return temp.split('"')[1]

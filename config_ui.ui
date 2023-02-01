@@ -10,19 +10,19 @@
     <x>0</x>
     <y>0</y>
     <width>640</width>
-    <height>410</height>
+    <height>430</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>640</width>
-    <height>410</height>
+    <height>430</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>640</width>
-    <height>410</height>
+    <height>430</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -37,7 +37,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>380</y>
+      <y>400</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -52,7 +52,7 @@
       <x>10</x>
       <y>110</y>
       <width>621</width>
-      <height>111</height>
+      <height>131</height>
      </rect>
     </property>
     <property name="title">
@@ -64,10 +64,41 @@
        <x>10</x>
        <y>20</y>
        <width>601</width>
-       <height>81</height>
+       <height>105</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>云服务器IP</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Rsync 虚拟用户密码</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="LE_rsyncuser"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="LE_rsyncuserpasswd">
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Rsync 虚拟用户</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QLineEdit" name="LE_cloudserver">
         <property name="text">
@@ -78,36 +109,33 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_16">
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="LE_imageserver">
         <property name="text">
-         <string>Rsync 虚拟用户密码</string>
+         <string/>
         </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>云服务器IP</string>
+        <property name="placeholderText">
+         <string>192.168.1.2 或 192.168.1.2:8080</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Rsync 虚拟用户</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="LE_rsyncuserpasswd">
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="LE_rsyncuser"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>图床服务器IP</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="CB_enableimagebed">
+          <property name="text">
+           <string>启用图床</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -116,7 +144,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>230</y>
+      <y>250</y>
       <width>621</width>
       <height>141</height>
      </rect>
@@ -172,7 +200,7 @@
       <item row="3" column="1">
        <widget class="QLineEdit" name="LE_license">
         <property name="placeholderText">
-         <string>Bloger all rights reserved.</string>
+         <string>xxx all rights reserved.</string>
         </property>
        </widget>
       </item>
@@ -287,10 +315,13 @@
     </widget>
    </widget>
    <widget class="QPushButton" name="PB_loadconfig">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>380</y>
+      <y>400</y>
       <width>91</width>
       <height>23</height>
      </rect>
